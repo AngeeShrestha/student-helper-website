@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -79,85 +79,4 @@
     <script src="app.js"></script>
   </body>
 </html>
-=======
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Helper | Dashboard</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  </head>
-  <body data-page="dashboard" data-requires-auth="true">
-    <header class="site-header">
-      <div class="logo">Student Helper</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="login.html">Sign In</a>
-        <a class="active" href="dashboard.html">Dashboard</a>
-        <a href="profile.html">Profile</a>
-      </nav>
-      <span class="pill" id="user-pill">Guest</span>
-    </header>
 
-    <main>
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Study Planner Dashboard</h2>
-            <p>Manage tasks, deadlines, and notes. Data is stored in Firestore.</p>
-          </div>
-          <button type="button" class="ghost" id="sign-out">Sign Out</button>
-        </div>
-
-        <form id="task-form" class="stack" autocomplete="off">
-          <div class="grid">
-            <label>
-              Task
-              <input type="text" id="task-title" placeholder="Read chapter 4" required />
-            </label>
-            <label>
-              Deadline
-              <input type="date" id="task-deadline" />
-            </label>
-          </div>
-          <label>
-            Notes
-            <textarea id="task-notes" rows="3" placeholder="Remember to review lecture slides"></textarea>
-          </label>
-          <button type="submit">Add Task</button>
-          <p id="auth-status" class="status">Signed in.</p>
-        </form>
-
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Deadline</th>
-                <th>Notes</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="task-list">
-              <tr>
-                <td colspan="5" class="empty">Loading tasks...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <p>Keep your study plan updated each day.</p>
-    </footer>
-
-    <script src="app.js"></script>
-  </body>
-</html>
->>>>>>> a2fbdd68148ade8545fb4d7c00fa8fcdf4ba6e6c
