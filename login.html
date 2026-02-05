@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Helper | Sign In</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  </head>
+  <body data-page="login">
+    <header class="site-header">
+      <div class="logo">Student Helper</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a class="active" href="login.html">Sign In</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="profile.html">Profile</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="panel auth-panel">
+        <div>
+          <h2>Account Access</h2>
+          <p>Use Firebase Authentication to create an account or sign in.</p>
+        </div>
+        <form id="auth-form" class="stack">
+          <label>
+            Email
+            <input type="email" id="auth-email" placeholder="you@school.edu" required />
+          </label>
+          <label>
+            Password
+            <input type="password" id="auth-password" placeholder="••••••••" required />
+          </label>
+          <div class="button-row">
+            <button type="submit">Sign In</button>
+            <button type="button" id="sign-up">Create Account</button>
+          </div>
+          <button type="button" class="ghost" id="sign-out">Sign Out</button>
+          <p id="auth-status" class="status">Not signed in.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p>Need help? Your account is tied to Firebase Authentication.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
