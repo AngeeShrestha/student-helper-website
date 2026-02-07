@@ -300,4 +300,12 @@ th {
     align-items: stretch;
   }
 }
+body {
+  display: none;
+}
+
+body.auth-ready {
+  display: block;
+}
+
 
