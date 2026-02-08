@@ -12,43 +12,72 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.database();
-
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 // -------------------- PAGE INFO --------------------
 const page = document.body.dataset.page;
+const isProfileView = page === "profile";
+const isProfileEdit = page === "edit-profile";
 
-// -------------------- AUTH GUARD (GLOBAL) --------------------
-auth.onAuthStateChanged(user => {
-  // ❌ Not logged in → block everything except login
+// -------------------- AUTH GUARD --------------------
+auth.onAuthStateChanged(async user => {
+
+  // ❌ Not logged in
   if (!user && page !== "login") {
     window.location.replace("login.html");
     return;
   }
 
-  // ✅ Logged in → never allow login page
+  // ❌ Logged in but trying login page
   if (user && page === "login") {
     window.location.replace("dashboard.html");
     return;
   }
 
-  // Show page ONLY after auth confirmed
   document.body.classList.add("auth-ready");
+  if (!user) return;
 
-  // Show user email (no guest)
-  const userPill = document.getElementById("user-pill");
-  if (user && userPill) {
-    userPill.textContent = user.email;
+  // ---------------- PROFILE CHECK ----------------
+  const userRef = db.ref("users/" + user.uid);
+  const snapshot = await userRef.once("value");
+
+  // Create profile once
+  if (!snapshot.exists()) {
+    await userRef.set({
+      name: "",
+      email: user.email,
+      grade: "",
+      phone: "",
+      completed: false,
+      createdAt: Date.now()
+    });
+
+    window.location.replace("edit-profile.html");
+    return;
   }
 
-  // Load tasks only where needed
-  if (user && page === "dashboard") {
+  const profile = snapshot.val();
+
+  // ---------------- USER PILL (NAME > EMAIL) ----------------
+  const userPill = document.getElementById("user-pill");
+  if (userPill) {
+    userPill.textContent = profile.name || user.email;
+  }
+
+  // Force completion
+  if (!profile.completed && page !== "edit-profile") {
+    window.location.replace("edit-profile.html");
+    return;
+  }
+
+  // Load tasks
+  if (page === "dashboard") {
     loadTasks(user.uid);
   }
 
-  if (user && page === "profile") {
-    document.getElementById("profile-email").textContent = user.email;
-    document.getElementById("profile-uid").textContent = user.uid;
+  // Load profile
+  if (isProfileView || isProfileEdit) {
+    loadProfile(user.uid);
   }
 });
 
@@ -61,7 +90,7 @@ const signOutBtn = document.getElementById("sign-out");
 const statusText = document.getElementById("auth-status");
 
 if (authForm) {
-  authForm.addEventListener("submit", async (e) => {
+  authForm.addEventListener("submit", async e => {
     e.preventDefault();
     try {
       await auth.signInWithEmailAndPassword(
@@ -100,7 +129,7 @@ if (signOutBtn) {
 // -------------------- TASKS --------------------
 function loadTasks(uid) {
   const taskList = document.getElementById("task-list");
-  const ref = db.ref(`tasks/${uid}`);
+  const ref = db.ref("tasks/" + uid);
 
   ref.on("value", snapshot => {
     const data = snapshot.val();
@@ -119,8 +148,8 @@ function loadTasks(uid) {
         <td>${task.notes || "—"}</td>
         <td>${task.status}</td>
         <td>
-          <button data-id="${id}" data-action="toggle">Toggle</button>
-          <button data-id="${id}" data-action="delete">Delete</button>
+          <button onclick="toggleTask('${uid}','${id}')">Toggle</button>
+          <button onclick="deleteTask('${uid}','${id}')">Delete</button>
         </td>
       `;
       taskList.appendChild(row);
@@ -128,15 +157,26 @@ function loadTasks(uid) {
   });
 }
 
+function toggleTask(uid, id) {
+  const ref = db.ref(`tasks/${uid}/${id}/status`);
+  ref.once("value").then(snap => {
+    ref.set(snap.val() === "Open" ? "Done" : "Open");
+  });
+}
+
+function deleteTask(uid, id) {
+  db.ref(`tasks/${uid}/${id}`).remove();
+}
+
 // -------------------- ADD TASK --------------------
 const taskForm = document.getElementById("task-form");
 if (taskForm) {
-  taskForm.addEventListener("submit", async (e) => {
+  taskForm.addEventListener("submit", async e => {
     e.preventDefault();
     const user = auth.currentUser;
     if (!user) return;
 
-    await db.ref(`tasks/${user.uid}`).push({
+    await db.ref("tasks/" + user.uid).push({
       title: document.getElementById("task-title").value,
       deadline: document.getElementById("task-deadline").value,
       notes: document.getElementById("task-notes").value,
@@ -145,5 +185,53 @@ if (taskForm) {
     });
 
     taskForm.reset();
+  });
+}
+
+// -------------------- PROFILE LOAD --------------------
+function loadProfile(uid) {
+  const ref = db.ref("users/" + uid);
+
+  ref.on("value", snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    if (isProfileView) {
+      document.getElementById("view-name").textContent = data.name || "—";
+      document.getElementById("view-email").textContent = data.email;
+      document.getElementById("view-grade").textContent = data.grade || "—";
+      document.getElementById("view-phone").textContent = data.phone || "—";
+      document.getElementById("view-uid").textContent = uid;
+    }
+
+    if (isProfileEdit) {
+      document.getElementById("profile-name").value = data.name || "";
+      document.getElementById("profile-email").value = data.email;
+      document.getElementById("profile-grade").value = data.grade || "";
+      document.getElementById("profile-phone").value = data.phone || "";
+    }
+  });
+}
+
+// -------------------- PROFILE SAVE --------------------
+const profileForm = document.getElementById("profile-form");
+const profileStatus = document.getElementById("profile-status");
+
+if (profileForm) {
+  profileForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    await db.ref("users/" + user.uid).update({
+      name: document.getElementById("profile-name").value,
+      grade: document.getElementById("profile-grade").value,
+      phone: document.getElementById("profile-phone").value,
+      completed: true,
+      updatedAt: Date.now()
+    });
+
+    // ✅ Redirect after save
+    window.location.replace("dashboard.html");
   });
 }

@@ -1,60 +1,35 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Helper | Profile</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  </head>
-  <body data-page="profile" data-requires-auth="true">
-    <header class="site-header">
-      <div class="logo">Student Helper</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="login.html">Sign In</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a class="active" href="profile.html">Profile</a>
-      </nav>
-      <button type="button" class="ghost" id="sign-out">Sign Out</button>
-    </header>
+<head>
+  <meta charset="UTF-8">
+  <title>Student Helper | Profile</title>
+  <link rel="stylesheet" href="styles.css">
 
-    <main>
-      <section class="panel profile-panel">
-        <div class="panel-header">
-          <div>
-            <h2>Your Profile</h2>
-            <p>Review your account details and study activity.</p>
-          </div>
-          <span class="pill" id="user-pill"></span>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
 
-        </div>
+<body data-page="profile">
+<header>
+  <h2>My Profile</h2>
+  <span id="user-pill"></span>
+  <button id="sign-out">Sign Out</button>
+</header>
 
-        <div class="profile-grid">
-          <div class="profile-card">
-            <h3>Account</h3>
-            <p><strong>Name:</strong> <span id="profile-name">Student</span></p>
-            <p><strong>Email:</strong> <span id="profile-email">you@school.edu</span></p>
-            <p><strong>User ID:</strong> <span id="profile-uid">—</span></p>
-          </div>
-          <div class="profile-card">
-            <h3>Planner Summary</h3>
-            <p><strong>Total tasks:</strong> <span id="stat-total">0</span></p>
-            <p><strong>Open tasks:</strong> <span id="stat-open">0</span></p>
-            <p><strong>Completed:</strong> <span id="stat-completed">0</span></p>
-          </div>
-        </div>
-        <p id="auth-status" class="status">Signed in.</p>
-      </section>
-    </main>
+<main class="card">
+  <p><strong>Name:</strong> <span id="view-name">—</span></p>
+  <p><strong>Email:</strong> <span id="view-email">—</span></p>
+  <p><strong>Grade:</strong> <span id="view-grade">—</span></p>
+  <p><strong>Phone:</strong> <span id="view-phone">—</span></p>
+  <p><strong>User ID:</strong> <span id="view-uid">—</span></p>
 
-    <footer>
-      <p>Profile data updates in real time with Firestore.</p>
-    </footer>
+  <a href="edit-profile.html">
+    <button>Edit Profile</button>
+  </a>
+</main>
 
-    <script src="app.js"></script>
-  </body>
+<script src="app.js"></script>
+</body>
 </html>
