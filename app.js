@@ -63,6 +63,11 @@ auth.onAuthStateChanged(async user => {
   if (userPill) {
     userPill.textContent = profile.name || user.email;
   }
+  const welcome = document.getElementById("welcome-text");
+  if (welcome) {
+    welcome.textContent = `Welcome back, ${profile.name || "Student"} 👋`;
+  }
+
 
   // Force completion
   if (!profile.completed && page !== "edit-profile") {
@@ -129,6 +134,7 @@ if (signOutBtn) {
 // -------------------- TASKS --------------------
 function loadTasks(uid) {
   const taskList = document.getElementById("task-list");
+  if (!taskList) return;
   const ref = db.ref("tasks/" + uid);
 
   ref.on("value", snapshot => {

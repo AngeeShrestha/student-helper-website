@@ -314,12 +314,6 @@ body.auth-ready {
   background: white;
   border-radius: 8px;
 }
-
-label {
-  display: block;
-  margin-bottom: 12px;
-}
-
 input {
   width: 100%;
   padding: 8px;
