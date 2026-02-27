@@ -1,33 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Student Helper | Profile</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<title>My Profile</title>
+<link rel="stylesheet" href="styles.css">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 
 <body data-page="profile">
-<header>
-  <h2>My Profile</h2>
-  <span id="user-pill"></span>
-  <button id="sign-out">Sign Out</button>
+
+<header class="site-header">
+  <div class="logo">Student Helper</div>
+  <div class="button-row">
+    <span id="user-pill" class="pill"></span>
+    <button id="sign-out">Sign Out</button>
+  </div>
 </header>
 
-<main class="card">
-  <p><strong>Name:</strong> <span id="view-name">—</span></p>
-  <p><strong>Email:</strong> <span id="view-email">—</span></p>
-  <p><strong>Grade:</strong> <span id="view-grade">—</span></p>
-  <p><strong>Phone:</strong> <span id="view-phone">—</span></p>
-  <p><strong>User ID:</strong> <span id="view-uid">—</span></p>
+<main>
 
-  <a href="edit-profile.html">
-    <button>Edit Profile</button>
-  </a>
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>My Profile</h2>
+      <p>Manage your account and activity</p>
+    </div>
+    <a href="edit-profile.html"><button>Edit</button></a>
+  </div>
+
+  <div class="profile-grid">
+
+    <div class="profile-card">
+      <h3>Personal Info</h3>
+      <p><strong>Name:</strong> <span id="view-name">—</span></p>
+      <p><strong>Email:</strong> <span id="view-email">—</span></p>
+      <p><strong>Status:</strong> <span id="email-badge" class="badge"></span></p>
+      <p><strong>Grade:</strong> <span id="view-grade">—</span></p>
+      <p><strong>Phone:</strong> <span id="view-phone">—</span></p>
+    </div>
+
+    <div class="profile-card">
+      <h3>Account Info</h3>
+      <p><strong>User ID:</strong> <span id="view-uid"></span></p>
+      <p><strong>Member Since:</strong> <span id="member-since"></span></p>
+      <p><strong>Last Login:</strong> <span id="last-login"></span></p>
+    </div>
+
+    <div class="profile-card">
+      <h3>Task Statistics</h3>
+      <p>Total Tasks: <strong id="stat-total">0</strong></p>
+      <p>Open Tasks: <strong id="stat-open">0</strong></p>
+      <p>Completed Tasks: <strong id="stat-done">0</strong></p>
+    </div>
+
+  </div>
+</section>
+
 </main>
 
 <script src="app.js"></script>

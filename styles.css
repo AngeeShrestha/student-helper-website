@@ -318,5 +318,20 @@ input {
   width: 100%;
   padding: 8px;
 }
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
 
+.badge.success {
+  background: #e6f6ed;
+  color: #1b7f4c;
+}
+
+.badge.danger {
+  background: #fdecea;
+  color: #b3261e;
+}
 

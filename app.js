@@ -129,6 +129,18 @@ if (signOutBtn) {
     await auth.signOut();
     window.location.replace("login.html");
   });
+  // -------------------- SEND VERIFICATION --------------------
+const verifyBtn = document.getElementById("send-verification");
+
+if (verifyBtn) {
+  verifyBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    await user.sendEmailVerification();
+    alert("Verification email sent.");
+  });
+}
 }
 
 // -------------------- TASKS --------------------
@@ -195,21 +207,52 @@ if (taskForm) {
 }
 
 // -------------------- PROFILE LOAD --------------------
+// -------------------- PROFILE LOAD --------------------
 function loadProfile(uid) {
   const ref = db.ref("users/" + uid);
 
-  ref.on("value", snapshot => {
+  ref.on("value", async snapshot => {
     const data = snapshot.val();
     if (!data) return;
 
+    const user = auth.currentUser;
+    if (!user) return;
+
+    // ---------------- VIEW MODE ----------------
     if (isProfileView) {
+
       document.getElementById("view-name").textContent = data.name || "—";
       document.getElementById("view-email").textContent = data.email;
       document.getElementById("view-grade").textContent = data.grade || "—";
       document.getElementById("view-phone").textContent = data.phone || "—";
       document.getElementById("view-uid").textContent = uid;
+
+      // ✅ Email verification badge (if exists in HTML)
+      const badge = document.getElementById("email-badge");
+      if (badge) {
+        badge.textContent = user.emailVerified ? "Verified ✔" : "Not Verified";
+        badge.className = user.emailVerified ? "badge success" : "badge danger";
+      }
+
+      // ✅ Account metadata (if HTML contains these IDs)
+      const memberSince = document.getElementById("member-since");
+      const lastLogin = document.getElementById("last-login");
+
+      if (memberSince) {
+        memberSince.textContent =
+          new Date(user.metadata.creationTime).toLocaleDateString();
+      }
+
+      if (lastLogin) {
+        lastLogin.textContent =
+          new Date(user.metadata.lastSignInTime).toLocaleDateString();
+      }
+
+      // ✅ Load task statistics (if stats section exists)
+      loadTaskStats(uid);
     }
 
+    // ---------------- EDIT MODE ----------------
     if (isProfileEdit) {
       document.getElementById("profile-name").value = data.name || "";
       document.getElementById("profile-email").value = data.email;
@@ -240,4 +283,32 @@ if (profileForm) {
     // ✅ Redirect after save
     window.location.replace("dashboard.html");
   });
+  // -------------------- TASK STATS --------------------
+function loadTaskStats(uid) {
+  const ref = db.ref("tasks/" + uid);
+
+  ref.once("value", snapshot => {
+    const data = snapshot.val();
+
+    let total = 0;
+    let open = 0;
+    let done = 0;
+
+    if (data) {
+      Object.values(data).forEach(task => {
+        total++;
+        if (task.status === "Open") open++;
+        if (task.status === "Done") done++;
+      });
+    }
+
+    const totalEl = document.getElementById("stat-total");
+    const openEl = document.getElementById("stat-open");
+    const doneEl = document.getElementById("stat-done");
+
+    if (totalEl) totalEl.textContent = total;
+    if (openEl) openEl.textContent = open;
+    if (doneEl) doneEl.textContent = done;
+  });
+}
 }
