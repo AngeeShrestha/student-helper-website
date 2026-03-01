@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -9,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
   </head>
   <body data-page="login">
     <header class="site-header">
@@ -17,6 +15,7 @@
       <nav>
         <a href="index.html">Home</a>
         <a class="active" href="login.html">Sign In</a>
+        <a href="register.html">Create Account</a>
       </nav>
     </header>
 
@@ -24,16 +23,16 @@
       <section class="panel auth-panel">
         <div>
           <h2>Account Access</h2>
-          <p>Use Firebase Authentication to create an account or sign in.</p>
+          <p>Sign in with your existing account.</p>
         </div>
         <form id="auth-form" class="stack">
           <label>
             Email
             <input type="email" id="auth-email" placeholder="you@school.edu" required />
           </label>
-          <label>  
+          <label>
             Password
-            <input type="password" id="auth-password" placeholder="••••••••" required />
+            <input type="password" id="auth-password" placeholder="********" required />
           </label>
           <div class="button-row">
             <button type="submit">Sign In</button>
@@ -46,10 +45,9 @@
     </main>
 
     <footer>
-      <p>Need help? Your account is tied to Firebase Authentication.</p>
+      <p>Need an account? Use the Create Account button.</p>
     </footer>
 
     <script src="app.js"></script>
   </body>
 </html>
-

@@ -18,16 +18,16 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const page = document.body.dataset.page;
 const isProfileView = page === "profile";
 const isProfileEdit = page === "edit-profile";
+const publicPages = new Set(["home", "login", "register"]);
 
 // -------------------- AUTH GUARD --------------------
 auth.onAuthStateChanged(async user => {
-
-  if (!user && page !== "login") {
+  if (!user && !publicPages.has(page)) {
     window.location.replace("login.html");
     return;
   }
 
-  if (user && page === "login") {
+  if (user && (page === "login" || page === "register")) {
     window.location.replace("dashboard.html");
     return;
   }
@@ -59,22 +59,24 @@ auth.onAuthStateChanged(async user => {
     userPill.textContent = profile.name || user.email;
   }
 
+  const welcomeText = document.getElementById("welcome-text");
+  if (welcomeText) {
+    welcomeText.textContent = `Welcome back, ${profile.name || user.email}`;
+  }
+
   if (!profile.completed && page !== "edit-profile") {
     window.location.replace("edit-profile.html");
     return;
   }
 
-  // Dashboard task list
   if (page === "dashboard") {
     loadTasks(user.uid);
   }
 
-  // Profile pages
   if (isProfileView || isProfileEdit) {
     loadProfile(user.uid);
   }
 
-  // ✅ Attach statistics listener ONCE (proper place)
   if (isProfileView) {
     loadTaskStats(user.uid);
   }
@@ -89,7 +91,84 @@ if (signOutBtn) {
   });
 }
 
-// -------------------- TASK LIST (Dashboard) --------------------
+// -------------------- AUTH FORMS --------------------
+const authStatus = document.getElementById("auth-status");
+const authForm = document.getElementById("auth-form");
+const authEmail = document.getElementById("auth-email");
+const authPassword = document.getElementById("auth-password");
+const signUpBtn = document.getElementById("sign-up");
+
+if (authForm && page === "login") {
+  authForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!authEmail || !authPassword) return;
+
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    if (authStatus) authStatus.textContent = "Signing in...";
+
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      if (authStatus) authStatus.textContent = "Sign in successful. Redirecting...";
+    } catch (error) {
+      if (authStatus) authStatus.textContent = error.message;
+    }
+  });
+}
+
+if (signUpBtn && page === "login") {
+  signUpBtn.addEventListener("click", () => {
+    window.location.href = "register.html";
+  });
+}
+
+const registerForm = document.getElementById("register-form");
+const registerName = document.getElementById("register-name");
+const registerEmail = document.getElementById("register-email");
+const registerPassword = document.getElementById("register-password");
+const registerConfirmPassword = document.getElementById("register-confirm-password");
+
+if (registerForm && page === "register") {
+  registerForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!registerEmail || !registerPassword || !registerConfirmPassword) return;
+
+    const name = registerName ? registerName.value.trim() : "";
+    const email = registerEmail.value.trim();
+    const password = registerPassword.value;
+    const confirmPassword = registerConfirmPassword.value;
+
+    if (password !== confirmPassword) {
+      if (authStatus) authStatus.textContent = "Passwords do not match.";
+      return;
+    }
+
+    if (authStatus) authStatus.textContent = "Creating account...";
+
+    try {
+      const credentials = await auth.createUserWithEmailAndPassword(email, password);
+      const user = credentials.user;
+      if (!user) throw new Error("Unable to create user.");
+
+      await db.ref("users/" + user.uid).set({
+        name,
+        email: user.email,
+        grade: "",
+        phone: "",
+        completed: false,
+        createdAt: Date.now()
+      });
+
+      window.location.replace("edit-profile.html");
+    } catch (error) {
+      if (authStatus) authStatus.textContent = error.message;
+    }
+  });
+}
+
+// -------------------- TASK LIST --------------------
 function loadTasks(uid) {
   const taskList = document.getElementById("task-list");
   if (!taskList) return;
@@ -109,8 +188,8 @@ function loadTasks(uid) {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${task.title}</td>
-        <td>${task.deadline || "—"}</td>
-        <td>${task.notes || "—"}</td>
+        <td>${task.deadline || "-"}</td>
+        <td>${task.notes || "-"}</td>
         <td>${task.status}</td>
         <td>
           <button onclick="toggleTask('${uid}','${id}')">Toggle</button>
@@ -124,13 +203,45 @@ function loadTasks(uid) {
 
 function toggleTask(uid, id) {
   const ref = db.ref(`tasks/${uid}/${id}/status`);
-  ref.once("value").then(snap => {
-    ref.set(snap.val() === "Open" ? "Done" : "Open");
+  ref.once("value").then(snapshot => {
+    ref.set(snapshot.val() === "Open" ? "Done" : "Open");
   });
 }
 
 function deleteTask(uid, id) {
   db.ref(`tasks/${uid}/${id}`).remove();
+}
+
+const taskForm = document.getElementById("task-form");
+if (taskForm && page === "dashboard") {
+  taskForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const titleInput = document.getElementById("task-title");
+    const deadlineInput = document.getElementById("task-deadline");
+    const notesInput = document.getElementById("task-notes");
+    if (!titleInput || !deadlineInput || !notesInput) return;
+
+    const title = titleInput.value.trim();
+    if (!title) return;
+
+    try {
+      await db.ref(`tasks/${user.uid}`).push({
+        title,
+        deadline: deadlineInput.value || "",
+        notes: notesInput.value.trim(),
+        status: "Open",
+        createdAt: Date.now()
+      });
+      taskForm.reset();
+      if (authStatus) authStatus.textContent = "Task added.";
+    } catch (error) {
+      if (authStatus) authStatus.textContent = error.message;
+    }
+  });
 }
 
 // -------------------- PROFILE LOAD --------------------
@@ -145,15 +256,15 @@ function loadProfile(uid) {
     if (!user) return;
 
     if (isProfileView) {
-      document.getElementById("view-name").textContent = data.name || "—";
-      document.getElementById("view-email").textContent = data.email;
-      document.getElementById("view-grade").textContent = data.grade || "—";
-      document.getElementById("view-phone").textContent = data.phone || "—";
+      document.getElementById("view-name").textContent = data.name || "-";
+      document.getElementById("view-email").textContent = data.email || "-";
+      document.getElementById("view-grade").textContent = data.grade || "-";
+      document.getElementById("view-phone").textContent = data.phone || "-";
       document.getElementById("view-uid").textContent = uid;
 
       const badge = document.getElementById("email-badge");
       if (badge) {
-        badge.textContent = user.emailVerified ? "Verified ✔" : "Not Verified";
+        badge.textContent = user.emailVerified ? "Verified" : "Not Verified";
         badge.className = user.emailVerified ? "badge success" : "badge danger";
       }
 
@@ -161,41 +272,68 @@ function loadProfile(uid) {
       const lastLogin = document.getElementById("last-login");
 
       if (memberSince) {
-        memberSince.textContent =
-          new Date(user.metadata.creationTime).toLocaleDateString();
+        memberSince.textContent = new Date(user.metadata.creationTime).toLocaleDateString();
       }
-
       if (lastLogin) {
-        lastLogin.textContent =
-          new Date(user.metadata.lastSignInTime).toLocaleDateString();
+        lastLogin.textContent = new Date(user.metadata.lastSignInTime).toLocaleDateString();
       }
     }
 
     if (isProfileEdit) {
       document.getElementById("profile-name").value = data.name || "";
-      document.getElementById("profile-email").value = data.email;
+      document.getElementById("profile-email").value = data.email || "";
       document.getElementById("profile-grade").value = data.grade || "";
       document.getElementById("profile-phone").value = data.phone || "";
     }
   });
 }
 
-// -------------------- ✅ TASK STATISTICS (Proper Real-Time Version) --------------------
+const profileForm = document.getElementById("profile-form");
+if (profileForm && isProfileEdit) {
+  profileForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const nameInput = document.getElementById("profile-name");
+    const gradeInput = document.getElementById("profile-grade");
+    const phoneInput = document.getElementById("profile-phone");
+    if (!nameInput || !gradeInput || !phoneInput) return;
+
+    const name = nameInput.value.trim();
+    const grade = gradeInput.value.trim();
+    const phone = phoneInput.value.trim();
+
+    try {
+      await db.ref(`users/${user.uid}`).update({
+        name,
+        grade,
+        phone,
+        completed: Boolean(name)
+      });
+      window.location.replace("profile.html");
+    } catch (error) {
+      if (authStatus) authStatus.textContent = error.message;
+    }
+  });
+}
+
+// -------------------- TASK STATS --------------------
 function loadTaskStats(uid) {
   const ref = db.ref("tasks/" + uid);
 
   ref.on("value", snapshot => {
     const data = snapshot.val();
-
     let total = 0;
     let open = 0;
     let done = 0;
 
     if (data) {
       Object.values(data).forEach(task => {
-        total++;
-        if (task.status === "Open") open++;
-        if (task.status === "Done") done++;
+        total += 1;
+        if (task.status === "Open") open += 1;
+        if (task.status === "Done") done += 1;
       });
     }
 

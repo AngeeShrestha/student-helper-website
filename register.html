@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Helper | Create Account</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  </head>
+  <body data-page="register">
+    <header class="site-header">
+      <div class="logo">Student Helper</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a class="active" href="register.html">Create Account</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="panel auth-panel">
+        <div>
+          <h2>Create Account</h2>
+          <p>Register to start using your study dashboard.</p>
+        </div>
+        <form id="register-form" class="stack">
+          <label>
+            Name
+            <input type="text" id="register-name" placeholder="Your full name" />
+          </label>
+          <label>
+            Email
+            <input type="email" id="register-email" placeholder="you@school.edu" required />
+          </label>
+          <label>
+            Password
+            <input type="password" id="register-password" placeholder="At least 6 characters" required />
+          </label>
+          <label>
+            Confirm Password
+            <input type="password" id="register-confirm-password" placeholder="Re-enter password" required />
+          </label>
+          <div class="button-row">
+            <button type="submit">Create Account</button>
+            <a href="login.html"><button type="button" class="ghost">Back to Sign In</button></a>
+          </div>
+          <p id="auth-status" class="status">Create your account to continue.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p>Your account is stored with Firebase Authentication and Realtime Database.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
