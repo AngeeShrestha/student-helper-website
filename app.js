@@ -22,13 +22,11 @@ const isProfileEdit = page === "edit-profile";
 // -------------------- AUTH GUARD --------------------
 auth.onAuthStateChanged(async user => {
 
-  // ❌ Not logged in
   if (!user && page !== "login") {
     window.location.replace("login.html");
     return;
   }
 
-  // ❌ Logged in but trying login page
   if (user && page === "login") {
     window.location.replace("dashboard.html");
     return;
@@ -37,11 +35,9 @@ auth.onAuthStateChanged(async user => {
   document.body.classList.add("auth-ready");
   if (!user) return;
 
-  // ---------------- PROFILE CHECK ----------------
   const userRef = db.ref("users/" + user.uid);
   const snapshot = await userRef.once("value");
 
-  // Create profile once
   if (!snapshot.exists()) {
     await userRef.set({
       name: "",
@@ -58,95 +54,46 @@ auth.onAuthStateChanged(async user => {
 
   const profile = snapshot.val();
 
-  // ---------------- USER PILL (NAME > EMAIL) ----------------
   const userPill = document.getElementById("user-pill");
   if (userPill) {
     userPill.textContent = profile.name || user.email;
   }
-  const welcome = document.getElementById("welcome-text");
-  if (welcome) {
-    welcome.textContent = `Welcome back, ${profile.name || "Student"} 👋`;
-  }
 
-
-  // Force completion
   if (!profile.completed && page !== "edit-profile") {
     window.location.replace("edit-profile.html");
     return;
   }
 
-  // Load tasks
+  // Dashboard task list
   if (page === "dashboard") {
     loadTasks(user.uid);
   }
 
-  // Load profile
+  // Profile pages
   if (isProfileView || isProfileEdit) {
     loadProfile(user.uid);
   }
+
+  // ✅ Attach statistics listener ONCE (proper place)
+  if (isProfileView) {
+    loadTaskStats(user.uid);
+  }
 });
 
-// -------------------- LOGIN --------------------
-const authForm = document.getElementById("auth-form");
-const emailInput = document.getElementById("auth-email");
-const passwordInput = document.getElementById("auth-password");
-const signUpBtn = document.getElementById("sign-up");
-const signOutBtn = document.getElementById("sign-out");
-const statusText = document.getElementById("auth-status");
-
-if (authForm) {
-  authForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    try {
-      await auth.signInWithEmailAndPassword(
-        emailInput.value,
-        passwordInput.value
-      );
-      window.location.replace("dashboard.html");
-    } catch (err) {
-      statusText.textContent = err.message;
-    }
-  });
-}
-
-if (signUpBtn) {
-  signUpBtn.addEventListener("click", async () => {
-    try {
-      await auth.createUserWithEmailAndPassword(
-        emailInput.value,
-        passwordInput.value
-      );
-      statusText.textContent = "Account created. Please sign in.";
-    } catch (err) {
-      statusText.textContent = err.message;
-    }
-  });
-}
-
 // -------------------- SIGN OUT --------------------
+const signOutBtn = document.getElementById("sign-out");
 if (signOutBtn) {
   signOutBtn.addEventListener("click", async () => {
     await auth.signOut();
     window.location.replace("login.html");
   });
-  // -------------------- SEND VERIFICATION --------------------
-const verifyBtn = document.getElementById("send-verification");
-
-if (verifyBtn) {
-  verifyBtn.addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    await user.sendEmailVerification();
-    alert("Verification email sent.");
-  });
-}
 }
 
-// -------------------- TASKS --------------------
+// -------------------- TASK LIST (Dashboard) --------------------
 function loadTasks(uid) {
   const taskList = document.getElementById("task-list");
   if (!taskList) return;
+
   const ref = db.ref("tasks/" + uid);
 
   ref.on("value", snapshot => {
@@ -186,55 +133,30 @@ function deleteTask(uid, id) {
   db.ref(`tasks/${uid}/${id}`).remove();
 }
 
-// -------------------- ADD TASK --------------------
-const taskForm = document.getElementById("task-form");
-if (taskForm) {
-  taskForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    await db.ref("tasks/" + user.uid).push({
-      title: document.getElementById("task-title").value,
-      deadline: document.getElementById("task-deadline").value,
-      notes: document.getElementById("task-notes").value,
-      status: "Open",
-      createdAt: Date.now()
-    });
-
-    taskForm.reset();
-  });
-}
-
-// -------------------- PROFILE LOAD --------------------
 // -------------------- PROFILE LOAD --------------------
 function loadProfile(uid) {
   const ref = db.ref("users/" + uid);
 
-  ref.on("value", async snapshot => {
+  ref.on("value", snapshot => {
     const data = snapshot.val();
     if (!data) return;
 
     const user = auth.currentUser;
     if (!user) return;
 
-    // ---------------- VIEW MODE ----------------
     if (isProfileView) {
-
       document.getElementById("view-name").textContent = data.name || "—";
       document.getElementById("view-email").textContent = data.email;
       document.getElementById("view-grade").textContent = data.grade || "—";
       document.getElementById("view-phone").textContent = data.phone || "—";
       document.getElementById("view-uid").textContent = uid;
 
-      // ✅ Email verification badge (if exists in HTML)
       const badge = document.getElementById("email-badge");
       if (badge) {
         badge.textContent = user.emailVerified ? "Verified ✔" : "Not Verified";
         badge.className = user.emailVerified ? "badge success" : "badge danger";
       }
 
-      // ✅ Account metadata (if HTML contains these IDs)
       const memberSince = document.getElementById("member-since");
       const lastLogin = document.getElementById("last-login");
 
@@ -247,12 +169,8 @@ function loadProfile(uid) {
         lastLogin.textContent =
           new Date(user.metadata.lastSignInTime).toLocaleDateString();
       }
-
-      // ✅ Load task statistics (if stats section exists)
-      loadTaskStats(uid);
     }
 
-    // ---------------- EDIT MODE ----------------
     if (isProfileEdit) {
       document.getElementById("profile-name").value = data.name || "";
       document.getElementById("profile-email").value = data.email;
@@ -262,32 +180,11 @@ function loadProfile(uid) {
   });
 }
 
-// -------------------- PROFILE SAVE --------------------
-const profileForm = document.getElementById("profile-form");
-const profileStatus = document.getElementById("profile-status");
-
-if (profileForm) {
-  profileForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    await db.ref("users/" + user.uid).update({
-      name: document.getElementById("profile-name").value,
-      grade: document.getElementById("profile-grade").value,
-      phone: document.getElementById("profile-phone").value,
-      completed: true,
-      updatedAt: Date.now()
-    });
-
-    // ✅ Redirect after save
-    window.location.replace("dashboard.html");
-  });
-  // -------------------- TASK STATS --------------------
+// -------------------- ✅ TASK STATISTICS (Proper Real-Time Version) --------------------
 function loadTaskStats(uid) {
   const ref = db.ref("tasks/" + uid);
 
-  ref.once("value", snapshot => {
+  ref.on("value", snapshot => {
     const data = snapshot.val();
 
     let total = 0;
@@ -310,5 +207,4 @@ function loadTaskStats(uid) {
     if (openEl) openEl.textContent = open;
     if (doneEl) doneEl.textContent = done;
   });
-}
 }
